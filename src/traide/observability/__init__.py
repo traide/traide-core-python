@@ -6,12 +6,12 @@ from .tracing_config import TracingType, configure_tracing
 
 __all__ = [
     "LoggingConfig",
-    "LogType", 
+    "LogType",
     "LogLevel",
     "LoggerConfig",
     "configure_structlog",
     "SentryConfig",
-    "configure_sentry", 
+    "configure_sentry",
     "TracingType",
     "configure_tracing",
 ]

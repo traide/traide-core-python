@@ -15,6 +15,7 @@ class SentryConfig:
     profiles_sample_rate: float
     api_version: str
 
+
 def configure_sentry(sentry_config: SentryConfig) -> None:
     logger.info(
         "Configuring Sentry",

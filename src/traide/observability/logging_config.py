@@ -21,17 +21,21 @@ class LogLevel(IntEnum):
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
 
+    @staticmethod
+    def from_str(log_level_str: str) -> "LogLevel":
+        return LogLevel[log_level_str.upper()]
+
 
 @dataclass
 class LoggerConfig:
     name: str
-    level: LogLevel
+    level: str
 
 
 @dataclass
 class LoggingConfig:
     log_type: LogType
-    log_level: LogLevel
+    log_level: str
     loggers_to_configure: list[LoggerConfig]
 
 
@@ -74,7 +78,7 @@ def configure_structlog(
 
             root_logger = logging.getLogger()
             root_logger.addHandler(handler)
-            root_logger.setLevel(logging_config.log_level)
+            root_logger.setLevel(LogLevel.from_str(logging_config.log_level))
         case LogType.JSON:
             structlog.configure(
                 processors=[structlog.contextvars.merge_contextvars] + shared_processors + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],
@@ -98,7 +102,7 @@ def configure_structlog(
 
             root_logger = logging.getLogger()
             root_logger.addHandler(handler)
-            root_logger.setLevel(logging_config.log_level)
+            root_logger.setLevel(LogLevel.from_str(logging_config.log_level))
         case _:
             handler = StructuredLogHandler()  # type: ignore
             formatter = structlog.stdlib.ProcessorFormatter(
@@ -114,9 +118,9 @@ def configure_structlog(
             )
             handler = StructuredLogHandler()  # type: ignore
             handler.setFormatter(formatter)
-            setup_logging(handler, log_level=logging_config.log_level)  # type: ignore
+            setup_logging(handler, log_level=LogLevel.from_str(logging_config.log_level))  # type: ignore
 
     for logger_config in logging_config.loggers_to_configure:
         logger = logging.getLogger(logger_config.name)
         logger.addHandler(handler)
-        logger.setLevel(logger_config.level)
+        logger.setLevel(LogLevel.from_str(logger_config.level))
