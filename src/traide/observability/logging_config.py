@@ -1,7 +1,7 @@
 import logging
 import sys
 from dataclasses import dataclass
-from enum import IntEnum, StrEnum
+from enum import StrEnum
 
 import structlog
 from google.cloud.logging.handlers import StructuredLogHandler
@@ -14,28 +14,24 @@ class LogType(StrEnum):
     CONSOLE = "CONSOLE"
 
 
-class LogLevel(IntEnum):
-    DEBUG = logging.DEBUG
-    INFO = logging.INFO
-    WARNING = logging.WARNING
-    ERROR = logging.ERROR
-    CRITICAL = logging.CRITICAL
-
-    @staticmethod
-    def from_str(log_level_str: str) -> "LogLevel":
-        return LogLevel[log_level_str.upper()]
+class LogLevel(StrEnum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
 
 
 @dataclass
 class LoggerConfig:
     name: str
-    level: str
+    level: LogLevel
 
 
 @dataclass
 class LoggingConfig:
     log_type: LogType
-    log_level: str
+    log_level: LogLevel
     loggers_to_configure: list[LoggerConfig]
 
 
@@ -78,7 +74,7 @@ def configure_structlog(
 
             root_logger = logging.getLogger()
             root_logger.addHandler(handler)
-            root_logger.setLevel(LogLevel.from_str(logging_config.log_level))
+            root_logger.setLevel(logging_config.log_level.value)
         case LogType.JSON:
             structlog.configure(
                 processors=[structlog.contextvars.merge_contextvars] + shared_processors + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],
@@ -102,7 +98,7 @@ def configure_structlog(
 
             root_logger = logging.getLogger()
             root_logger.addHandler(handler)
-            root_logger.setLevel(LogLevel.from_str(logging_config.log_level))
+            root_logger.setLevel(logging_config.log_level.value)
         case _:
             handler = StructuredLogHandler()  # type: ignore
             formatter = structlog.stdlib.ProcessorFormatter(
@@ -118,9 +114,9 @@ def configure_structlog(
             )
             handler = StructuredLogHandler()  # type: ignore
             handler.setFormatter(formatter)
-            setup_logging(handler, log_level=LogLevel.from_str(logging_config.log_level))  # type: ignore
+            setup_logging(handler, log_level=logging_config.log_level.value)  # type: ignore
 
     for logger_config in logging_config.loggers_to_configure:
         logger = logging.getLogger(logger_config.name)
         logger.addHandler(handler)
-        logger.setLevel(LogLevel.from_str(logger_config.level))
+        logger.setLevel(logger_config.level.value)
