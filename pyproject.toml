@@ -14,10 +14,10 @@ requires-python = ">=3.12"
 dependencies = [
     "google-cloud-logging~=3.12",
     "opentelemetry-api==1.38.0", # use specific version to match gcp-trace
-    "opentelemetry-exporter-otlp-proto-grpc==1.38.0", # use specific version to match gcp-trace
+    "opentelemetry-exporter-otlp-proto-http==1.38.0", # use specific version to match gcp-trace; only used locally for jaegar
     "opentelemetry-sdk==1.38.0", # use specific version to match gcp-trace
     "opentelemetry-exporter-prometheus==0.59b0", # use specific version to match gcp-trace
-    "opentelemetry-instrumentation-sqlalchemy==0.59b0", # use specific version to match gcp-trace
+    "opentelemetry-instrumentation-sqlalchemy==0.59b0",
     "opentelemetry-exporter-gcp-trace>=1.11.0",
     "sentry-sdk~=2.43",
     "structlog~=25.5",

@@ -2,7 +2,7 @@ from enum import StrEnum
 
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter  # type: ignore
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor  # type: ignore
 from opentelemetry.sdk.metrics import MeterProvider
