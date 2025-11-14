@@ -5,7 +5,6 @@ from enum import StrEnum
 
 import structlog
 from google.cloud.logging.handlers import StructuredLogHandler
-from google.cloud.logging_v2.handlers import setup_logging  #  type: ignore
 
 
 class LogType(StrEnum):
@@ -72,9 +71,6 @@ def configure_structlog(
             handler = logging.StreamHandler(stream=sys.stdout)
             handler.setFormatter(formatter)
 
-            root_logger = logging.getLogger()
-            root_logger.addHandler(handler)
-            root_logger.setLevel(logging_config.log_level.value)
         case LogType.JSON:
             structlog.configure(
                 processors=[structlog.contextvars.merge_contextvars] + shared_processors + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],
@@ -96,9 +92,6 @@ def configure_structlog(
             handler = logging.StreamHandler(stream=sys.stdout)
             handler.setFormatter(formatter)
 
-            root_logger = logging.getLogger()
-            root_logger.addHandler(handler)
-            root_logger.setLevel(logging_config.log_level.value)
         case _:
             handler = StructuredLogHandler()  # type: ignore
             formatter = structlog.stdlib.ProcessorFormatter(
@@ -114,9 +107,13 @@ def configure_structlog(
             )
             handler = StructuredLogHandler()  # type: ignore
             handler.setFormatter(formatter)
-            setup_logging(handler, log_level=logging_config.log_level.value)  # type: ignore
 
     for logger_config in logging_config.loggers_to_configure:
         logger = logging.getLogger(logger_config.name)
-        logger.addHandler(handler)
+        logger.handlers = [handler]
         logger.setLevel(logger_config.level.value)
+        if logger_config.name in ["uvicorn.error", "uvicorn.access"]:
+            logger.propagate = False
+
+    logging.basicConfig(handlers=[handler], level=logging_config.log_level.value)
+    logging.captureWarnings(True)
