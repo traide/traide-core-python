@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"          # Path where your Dockerfile lives
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "pip"
+    directory: "/"          # Path where pyproject.toml lives
+    schedule:
+      interval: "daily"
