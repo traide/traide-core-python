@@ -4,6 +4,8 @@ A Python library for core Traide functionality including observability utilities
 
 ## Installation
 
+### Core Installation
+
 This package can be installed from GitHub:
 
 ```bash
@@ -15,6 +17,32 @@ Or add it to your `pyproject.toml`:
 ```toml
 [dependencies]
 traide-core-python = {git = "https://github.com/traide/traide-core-python.git"}
+```
+
+### Optional Extras
+
+The package supports optional extras for framework-specific integrations:
+
+**FastAPI support:**
+```bash
+uv add "traide-core-python[fastapi]@git+https://github.com/traide/traide-core-python.git"
+```
+
+Or in `pyproject.toml`:
+```toml
+[dependencies]
+traide-core-python = {git = "https://github.com/traide/traide-core-python.git", extras = ["fastapi"]}
+```
+
+**FastStream support:**
+```bash
+uv add "traide-core-python[faststream]@git+https://github.com/traide/traide-core-python.git"
+```
+
+Or in `pyproject.toml`:
+```toml
+[dependencies]
+traide-core-python = {git = "https://github.com/traide/traide-core-python.git", extras = ["faststream"]}
 ```
 
 ## Usage
