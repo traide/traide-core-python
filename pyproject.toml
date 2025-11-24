@@ -38,7 +38,10 @@ dev = [
     "ruff",
     "pyright",
     "pytest",
+    "pytest-asyncio",
     "pre-commit",
+    "ruff",
+    "typer",
 ]
 fastapi = [
     "fastapi~=0.121.0",
