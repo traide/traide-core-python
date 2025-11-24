@@ -35,17 +35,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "bandit",
-    "devtools",
-    "pre-commit",
+    "ruff",
     "pyright",
-    "pyright[nodejs]",
     "pytest",
     "pytest-asyncio",
-    "pytest-dotenv",
-    "pytest-mock",
-    "pytest-xdist",
-    "rich",
+    "pre-commit",
     "ruff",
     "typer",
 ]
