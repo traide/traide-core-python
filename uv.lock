@@ -1958,6 +1958,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "gcloud-aio-storage" },
+    { name = "google-auth" },
     { name = "google-cloud-logging" },
     { name = "greenlet" },
     { name = "httpx" },
@@ -2004,6 +2005,7 @@ requires-dist = [
     { name = "fastapi", marker = "extra == 'fastapi'", specifier = "~=0.122.0" },
     { name = "faststream", extras = ["cli", "otel", "prometheus", "redis"], marker = "extra == 'faststream'", specifier = "~=0.6.3" },
     { name = "gcloud-aio-storage", specifier = ">=9.5.0" },
+    { name = "google-auth", specifier = "~=2.43.0" },
     { name = "google-cloud-logging", specifier = "~=3.12" },
     { name = "greenlet", specifier = "~=3.2.4" },
     { name = "httpx", specifier = "~=0.28.1" },
