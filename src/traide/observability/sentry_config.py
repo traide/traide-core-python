@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SentryConfig:
-    dsn: str | None
+    dsn: str
     enabled: bool
     environment: str
-    traces_sample_rate: float
-    profiles_sample_rate: float
     api_version: str
+    traces_sample_rate: float = 0.3
+    profiles_sample_rate: float = 0.3
 
 
 def configure_sentry(sentry_config: SentryConfig) -> None:
@@ -27,7 +27,7 @@ def configure_sentry(sentry_config: SentryConfig) -> None:
             "profiles_sample_rate": sentry_config.profiles_sample_rate,
         },
     )
-    if sentry_config.dsn and sentry_config.enabled:
+    if sentry_config.enabled:
         sentry_sdk.init(
             dsn=sentry_config.dsn,
             traces_sample_rate=sentry_config.traces_sample_rate,
