@@ -24,7 +24,7 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy==0.59b0", # use specific version to match gcp-trace
     "opentelemetry-exporter-gcp-trace>=1.11.0",
     "pgvector~=0.4.1",
-    "psycopg[binary]~=3.2.12",
+    "psycopg[binary]~=3.3.1",
     "pydantic-settings~=2.12.0",
     "redis~=6.4.0",
     "sentry-sdk~=2.45",
