@@ -13,18 +13,18 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "gcloud-aio-storage>=9.5.0",
-    "google-auth~=2.43.0", # pin version to match other google cloud libraries
+    "google-auth~=2.45.0", # pin version to match other google cloud libraries
     "google-cloud-logging~=3.12",
-    "greenlet~=3.2.4", # required to support async sqlalchemy
+    "greenlet~=3.3.0", # required to support async sqlalchemy
     "httpx~=0.28.1",
-    "opentelemetry-api==1.38.0", # use specific version to match gcp-trace
-    "opentelemetry-exporter-otlp-proto-http==1.38.0", # use specific version to match gcp-trace; only used locally for jaegar
-    "opentelemetry-sdk==1.38.0", # use specific version to match gcp-trace
-    "opentelemetry-exporter-prometheus==0.59b0", # use specific version to match gcp-trace
-    "opentelemetry-instrumentation-sqlalchemy==0.59b0", # use specific version to match gcp-trace
+    "opentelemetry-api==1.39.1", # use specific version to match gcp-trace
+    "opentelemetry-exporter-otlp-proto-http==1.39.1", # use specific version to match gcp-trace; only used locally for jaegar
+    "opentelemetry-sdk==1.39.1", # use specific version to match gcp-trace
+    "opentelemetry-exporter-prometheus==0.60b1", # use specific version to match gcp-trace
+    "opentelemetry-instrumentation-sqlalchemy==0.60b1", # use specific version to match gcp-trace
     "opentelemetry-exporter-gcp-trace>=1.11.0",
     "pgvector~=0.4.1",
-    "psycopg[binary]~=3.2.12",
+    "psycopg[binary]~=3.3.2",
     "pydantic-settings~=2.12.0",
     "redis~=6.4.0",
     "sentry-sdk~=2.45",
@@ -42,8 +42,8 @@ dev = [
     "pre-commit",
 ]
 fastapi = [
-    "fastapi~=0.122.0",
-    "opentelemetry-instrumentation-fastapi==0.59b0", # use specific version to match gcp-trace
+    "fastapi~=0.125.0",
+    "opentelemetry-instrumentation-fastapi==0.60b1", # use specific version to match gcp-trace
     "prometheus-fastapi-instrumentator>=7.1.0",
 ]
 faststream = [

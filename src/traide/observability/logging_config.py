@@ -108,12 +108,13 @@ def configure_structlog(
             handler = StructuredLogHandler()  # type: ignore
             handler.setFormatter(formatter)
 
+    logging.basicConfig(handlers=[handler], level=logging_config.log_level.value)
+    logging.captureWarnings(True)
+
     for logger_config in logging_config.loggers_to_configure:
         logger = logging.getLogger(logger_config.name)
-        logger.handlers = [handler]
+        logger.handlers.clear()
+        logger.handlers.append(handler)
         logger.setLevel(logger_config.level.value)
         if logger_config.name in ["uvicorn.error", "uvicorn.access"]:
             logger.propagate = False
-
-    logging.basicConfig(handlers=[handler], level=logging_config.log_level.value)
-    logging.captureWarnings(True)
