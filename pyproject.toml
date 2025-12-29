@@ -42,7 +42,7 @@ dev = [
     "pre-commit",
 ]
 fastapi = [
-    "fastapi~=0.125.0",
+    "fastapi~=0.128.0",
     "opentelemetry-instrumentation-fastapi==0.60b1", # use specific version to match gcp-trace
     "prometheus-fastapi-instrumentator>=7.1.0",
 ]
