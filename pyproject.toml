@@ -13,7 +13,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "gcloud-aio-storage>=9.5.0",
-    "google-auth~=2.45.0", # pin version to match other google cloud libraries
+    "google-auth~=2.47.0", # pin version to match other google cloud libraries
     "google-cloud-logging~=3.12",
     "greenlet~=3.3.0", # required to support async sqlalchemy
     "httpx~=0.28.1",
