@@ -64,7 +64,11 @@ def configure_structlog(
                 foreign_pre_chain=shared_processors,
                 processors=[
                     structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                    structlog.dev.ConsoleRenderer(colors=True, force_colors=True),
+                    structlog.dev.ConsoleRenderer(
+                        colors=True,
+                        force_colors=True,
+                        exception_formatter=structlog.dev.plain_traceback,
+                    ),
                 ],
             )
 
@@ -84,7 +88,7 @@ def configure_structlog(
                 foreign_pre_chain=shared_processors,
                 processors=[
                     structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                    structlog.processors.dict_tracebacks,
+                    structlog.processors.format_exc_info,
                     structlog.processors.JSONRenderer(),
                 ],
             )
