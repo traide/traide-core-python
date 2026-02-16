@@ -25,7 +25,7 @@ dependencies = [
     "opentelemetry-exporter-gcp-trace==1.11.0",
     "pgvector~=0.4.1",
     "psycopg[binary]~=3.3.2",
-    "pydantic-settings~=2.12.0",
+    "pydantic-settings~=2.13.0",
     "redis~=7.1.0",
     "sentry-sdk~=2.45",
     "sqlalchemy~=2.0.44",
