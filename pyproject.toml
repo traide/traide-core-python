@@ -18,7 +18,7 @@ dependencies = [
     "google-cloud-logging~=3.13",
     "greenlet~=3.3.0", # required to support async sqlalchemy
     "httpx~=0.28.1",
-    "opentelemetry-api==1.39.1", # use specific version to match gcp-trace
+    "opentelemetry-api==1.40.0", # use specific version to match gcp-trace
     "opentelemetry-exporter-otlp-proto-http==1.39.1", # use specific version to match gcp-trace; only used locally for jaegar
     "opentelemetry-sdk==1.39.1", # use specific version to match gcp-trace
     "opentelemetry-exporter-prometheus==0.60b1", # use specific version to match gcp-trace
