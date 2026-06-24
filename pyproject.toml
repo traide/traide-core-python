@@ -47,7 +47,7 @@ fastapi = [
     "prometheus-fastapi-instrumentator>=8.0.2",
 ]
 faststream = [
-    "faststream[cli,otel,prometheus,redis]~=0.6.7", # held at 0.6.x: 0.7 removed faststream.redis.parser.JSONMessageFormat, breaking backend_pipeline (see TRA-1286 follow-up)
+    "faststream[cli,otel,prometheus,redis]>=0.6.7,<0.8.0", # held at 0.6.x: 0.7 removed faststream.redis.parser.JSONMessageFormat, breaking backend_pipeline (see TRA-1286 follow-up)
 ]
 
 [dependency-groups]
