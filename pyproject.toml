@@ -21,7 +21,7 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-http==1.41.0", # use specific version to match gcp-trace; only used locally for jaegar
     "opentelemetry-sdk==1.41.0", # use specific version to match gcp-trace
     "opentelemetry-exporter-prometheus==0.62b0", # use specific version to match gcp-trace
-    "opentelemetry-instrumentation-sqlalchemy==0.62b0", # use specific version to match gcp-trace
+    "opentelemetry-instrumentation-sqlalchemy==0.63b1", # use specific version to match gcp-trace
     "opentelemetry-exporter-gcp-trace==1.11.0",
     "pgvector~=0.4.1",
     "psycopg[binary]~=3.3.3",
