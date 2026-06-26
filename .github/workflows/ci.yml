@@ -27,7 +27,7 @@ jobs:
         version: "latest"
 
     - name: Install dependencies
-      run: uv sync --extra dev
+      run: uv sync --extra dev --extra fastapi
 
     - name: Run pre-commit
       run: uv run pre-commit run --all-files

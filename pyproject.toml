@@ -42,7 +42,13 @@ dev = [
     "pre-commit",
 ]
 fastapi = [
-    "fastapi~=0.138.0",
+    # HELD BACK <0.137 (TRA-1286): fastapi >=0.137 adds a lazy `_IncludedRouter`
+    # that opentelemetry-instrumentation-fastapi 0.63b1 crashes on (unguarded
+    # route.path on a partial match -> 500 on CORS preflight). The upstream fix
+    # is otel 0.64b0, which needs opentelemetry-sdk>=1.43 — but logfire
+    # (head_of_customs) caps sdk<1.43. WHEN logfire supports sdk>=1.43: raise
+    # fastapi to latest AND bump the otel stack to 0.64b0/1.43, then drop this note.
+    "fastapi~=0.136.3",
     "opentelemetry-instrumentation-fastapi==0.63b1", # use specific version to match gcp-trace
     "prometheus-fastapi-instrumentator>=8.0.2",
 ]
