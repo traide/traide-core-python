@@ -29,7 +29,7 @@ def _instrumented_app() -> FastAPI:
     router = APIRouter()
 
     @router.get("/items")
-    def items() -> dict[str, bool]:
+    def items() -> dict[str, bool]:  # pyright: ignore[reportUnusedFunction]
         return {"ok": True}
 
     app.include_router(router, prefix="/api")
@@ -40,14 +40,14 @@ def _instrumented_app() -> FastAPI:
 def test_preflight_against_included_route_does_not_500() -> None:
     client = TestClient(_instrumented_app(), raise_server_exceptions=True)
 
-    preflight = client.options(
+    preflight = client.options(  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
         "/api/items",
         headers={
             "Origin": "https://example.com",
             "Access-Control-Request-Method": "GET",
         },
     )
-    assert preflight.status_code != 500
+    assert preflight.status_code != 500  # pyright: ignore[reportUnknownMemberType]
 
-    assert client.post("/api/items").status_code == 405  # method mismatch -> PARTIAL
-    assert client.get("/api/items").status_code == 200  # full match still works
+    assert client.post("/api/items").status_code == 405  # method mismatch -> PARTIAL  # pyright: ignore[reportUnknownMemberType]
+    assert client.get("/api/items").status_code == 200  # full match still works  # pyright: ignore[reportUnknownMemberType]
