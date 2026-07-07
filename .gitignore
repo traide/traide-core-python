@@ -26,3 +26,5 @@ htmlcov/
 
 # Ruff
 .ruff_cache/
+.worktrees/
+.claude/worktrees/
