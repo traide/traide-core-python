@@ -17,11 +17,11 @@ dependencies = [
     "google-cloud-logging~=3.16",
     "greenlet~=3.5.2", # required to support async sqlalchemy
     "httpx~=0.28.1",
-    "opentelemetry-api==1.42.1", # use specific version to match gcp-trace
-    "opentelemetry-exporter-otlp-proto-http==1.42.1", # match gcp-trace; only used locally for jaeger
-    "opentelemetry-sdk==1.42.1", # use specific version to match gcp-trace
-    "opentelemetry-exporter-prometheus==0.63b1", # use specific version to match gcp-trace
-    "opentelemetry-instrumentation-sqlalchemy==0.63b1", # use specific version to match gcp-trace
+    "opentelemetry-api==1.44.0", # use specific version to match gcp-trace
+    "opentelemetry-exporter-otlp-proto-http==1.44.0", # match gcp-trace; only used locally for jaeger
+    "opentelemetry-sdk==1.44.0", # use specific version to match gcp-trace
+    "opentelemetry-exporter-prometheus==0.65b0", # use specific version to match gcp-trace
+    "opentelemetry-instrumentation-sqlalchemy==0.65b0", # use specific version to match gcp-trace
     "opentelemetry-exporter-gcp-trace==1.12.0", # held: 1.13/1.14 only add a deprecation marker on CloudTraceSpanExporter, which strict pyright rejects -- migrate to the OTLP exporter instead of bumping
     "pgvector~=0.4.2", # held at 0.4.x: 0.5.0 makes SQLAlchemy vector columns return list instead of ndarray, which ai-prediction-service reads directly
     "psycopg[binary]~=3.3.4",
@@ -42,14 +42,8 @@ dev = [
     "pre-commit",
 ]
 fastapi = [
-    # HELD BACK <0.137 (TRA-1286): fastapi >=0.137 adds a lazy `_IncludedRouter`
-    # that opentelemetry-instrumentation-fastapi 0.63b1 crashes on (unguarded
-    # route.path on a partial match -> 500 on CORS preflight). The upstream fix
-    # is otel 0.64b0, which needs opentelemetry-sdk>=1.43 — but logfire
-    # (head_of_customs) caps sdk<1.43. WHEN logfire supports sdk>=1.43: raise
-    # fastapi to latest AND bump the otel stack to 0.64b0/1.43, then drop this note.
-    "fastapi~=0.136.3",
-    "opentelemetry-instrumentation-fastapi==0.63b1", # use specific version to match gcp-trace
+    "fastapi~=0.141.1",
+    "opentelemetry-instrumentation-fastapi==0.65b0", # use specific version to match gcp-trace
     "prometheus-fastapi-instrumentator>=8.0.2",
 ]
 faststream = [
