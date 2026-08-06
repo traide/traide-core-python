@@ -28,3 +28,4 @@ htmlcov/
 .ruff_cache/
 .worktrees/
 .claude/worktrees/
+.claude/settings.local.json
