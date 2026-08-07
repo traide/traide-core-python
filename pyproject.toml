@@ -19,7 +19,7 @@ dependencies = [
     "httpx~=0.28.1",
     "opentelemetry-api==1.42.1", # use specific version to match gcp-trace
     "opentelemetry-exporter-otlp-proto-http==1.42.1", # match gcp-trace; only used locally for jaeger
-    "opentelemetry-sdk==1.42.1", # use specific version to match gcp-trace
+    "opentelemetry-sdk==1.43.0", # use specific version to match gcp-trace
     "opentelemetry-exporter-prometheus==0.63b1", # use specific version to match gcp-trace
     "opentelemetry-instrumentation-sqlalchemy==0.63b1", # use specific version to match gcp-trace
     "opentelemetry-exporter-gcp-trace==1.12.0", # held: 1.13/1.14 only add a deprecation marker on CloudTraceSpanExporter, which strict pyright rejects -- migrate to the OTLP exporter instead of bumping
