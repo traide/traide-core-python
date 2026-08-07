@@ -1,9 +1,9 @@
 """Regression: otel FastAPI instrumentation must not 500 on a partial route match.
 
-opentelemetry-instrumentation-fastapi 0.63b1 read `route.path` unguarded on a
+opentelemetry-instrumentation-fastapi 0.63b1 reads `route.path` unguarded on a
 `Match.PARTIAL` hit. FastAPI >=0.137 puts a lazy `_IncludedRouter` (no `.path`)
 into `app.routes` for every `include_router()`, so a CORS preflight / method
-mismatch against an included route raised AttributeError -> HTTP 500. Fixed
+mismatch against an included route raises AttributeError -> HTTP 500. Fixed
 upstream in otel 0.64b0 (TRA-1286). This test fails loudly if the otel
 instrumentation pin is ever dropped back below 0.64b0.
 """

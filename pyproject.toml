@@ -17,11 +17,12 @@ dependencies = [
     "google-cloud-logging~=3.16",
     "greenlet~=3.5.2", # required to support async sqlalchemy
     "httpx~=0.28.1",
-    "opentelemetry-api==1.44.0", # use specific version to match gcp-trace
-    "opentelemetry-exporter-otlp-proto-http==1.44.0", # match gcp-trace; only used locally for jaeger
-    "opentelemetry-sdk==1.44.0", # use specific version to match gcp-trace
-    "opentelemetry-exporter-prometheus==0.65b0", # use specific version to match gcp-trace
-    "opentelemetry-instrumentation-sqlalchemy==0.65b0", # use specific version to match gcp-trace
+    # otel ships core (1.x) and contrib (0.xxbN) as one release train that pins itself together: sdk 1.44.0 requires api ==1.44.0 and semantic-conventions ==0.65b0. Bump the whole set or none of it.
+    "opentelemetry-api==1.44.0",
+    "opentelemetry-exporter-otlp-proto-http==1.44.0", # only used locally for jaeger
+    "opentelemetry-sdk==1.44.0",
+    "opentelemetry-exporter-prometheus==0.65b0",
+    "opentelemetry-instrumentation-sqlalchemy==0.65b0",
     "opentelemetry-exporter-gcp-trace==1.12.0", # held: 1.13/1.14 only add a deprecation marker on CloudTraceSpanExporter, which strict pyright rejects -- migrate to the OTLP exporter instead of bumping
     "pgvector~=0.4.2", # held at 0.4.x: 0.5.0 makes SQLAlchemy vector columns return list instead of ndarray, which ai-prediction-service reads directly
     "psycopg[binary]~=3.3.4",
@@ -43,7 +44,7 @@ dev = [
 ]
 fastapi = [
     "fastapi~=0.141.1",
-    "opentelemetry-instrumentation-fastapi==0.65b0", # use specific version to match gcp-trace
+    "opentelemetry-instrumentation-fastapi==0.65b0", # same otel release train as the core set above
     "prometheus-fastapi-instrumentator>=8.0.2",
 ]
 faststream = [
