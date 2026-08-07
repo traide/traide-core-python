@@ -3,9 +3,9 @@
 opentelemetry-instrumentation-fastapi 0.63b1 reads `route.path` unguarded on a
 `Match.PARTIAL` hit. FastAPI >=0.137 puts a lazy `_IncludedRouter` (no `.path`)
 into `app.routes` for every `include_router()`, so a CORS preflight / method
-mismatch against an included route raises AttributeError -> HTTP 500. Core pins
-`fastapi~=0.136.3` (TRA-1286) so no `_IncludedRouter` exists. This test fails
-loudly if fastapi is ever bumped back to >=0.137 without fixing the otel pin.
+mismatch against an included route raises AttributeError -> HTTP 500. Fixed
+upstream in otel 0.64b0 (TRA-1286). This test fails loudly if the otel
+instrumentation pin is ever dropped back below 0.64b0.
 """
 
 from __future__ import annotations
