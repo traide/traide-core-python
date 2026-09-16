@@ -12,27 +12,27 @@ description = "Traide core Python library"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "gcloud-aio-storage~=9.6.4",
-    "google-auth==2.56.3", # pin version to match other google cloud libraries
+    "gcloud-aio-storage~=9.6",
+    "google-auth~=2.58", # pin version to match other google cloud libraries
     "google-cloud-logging~=3.16",
-    "greenlet~=3.5.2", # required to support async sqlalchemy
+    "greenlet~=3.5", # required to support async sqlalchemy
     "httpx~=0.28.1",
     # otel ships core (1.x) and contrib (0.xxbN) as one release train that pins itself together: sdk 1.44.0 requires api ==1.44.0 and semantic-conventions ==0.65b0. Bump the whole set or none of it.
-    "opentelemetry-api==1.44.0",
-    "opentelemetry-exporter-otlp-proto-http==1.44.0", # only used locally for jaeger
-    "opentelemetry-sdk==1.44.0",
+    "opentelemetry-api~=1.44",
+    "opentelemetry-exporter-otlp-proto-http~=1.44", # only used locally for jaeger
+    "opentelemetry-sdk~=1.44",
     "opentelemetry-exporter-prometheus==0.65b0",
     "opentelemetry-instrumentation-sqlalchemy==0.65b0",
-    "opentelemetry-exporter-gcp-trace==1.12.0", # held: 1.13/1.14 only add a deprecation marker on CloudTraceSpanExporter, which strict pyright rejects -- migrate to the OTLP exporter instead of bumping
+    "opentelemetry-exporter-gcp-trace~=1.12.0", # held: 1.13/1.14 only add a deprecation marker on CloudTraceSpanExporter, which strict pyright rejects -- migrate to the OTLP exporter instead of bumping
     "pgvector~=0.4.2", # held at 0.4.x: 0.5.0 makes SQLAlchemy vector columns return list instead of ndarray, which ai-prediction-service reads directly
-    "psycopg[binary]~=3.3.4",
-    "pydantic-settings~=2.14.2",
-    "redis~=7.4.1", # already the newest 7.x; held below 8 by faststream 0.6.7's redis extra, which caps redis <8.0.0
-    "sentry-sdk~=2.66.1",
-    "sqlalchemy~=2.0.51",
+    "psycopg[binary]~=3.3",
+    "pydantic-settings~=2.15",
+    "redis~=7.4", # already the newest 7.x; held below 8 by faststream 0.6.7's redis extra, which caps redis <8.0.0
+    "sentry-sdk~=2.69",
+    "sqlalchemy~=2.0",
     "structlog~=26.1",
-    "tenacity~=9.1.4",
-    "uvicorn~=0.52.1",
+    "tenacity~=9.1",
+    "uvicorn~=0.53.0",
 ]
 
 [project.optional-dependencies]
@@ -45,7 +45,7 @@ dev = [
 fastapi = [
     "fastapi~=0.141.1",
     "opentelemetry-instrumentation-fastapi==0.65b0", # same otel release train as the core set above
-    "prometheus-fastapi-instrumentator>=8.0.2",
+    "prometheus-fastapi-instrumentator~=8.1",
 ]
 faststream = [
     "faststream[cli,otel,prometheus,redis]~=0.6.7", # held at 0.6.x: 0.7 removed faststream.redis.parser.JSONMessageFormat, breaking backend_pipeline (see TRA-1286 follow-up)
