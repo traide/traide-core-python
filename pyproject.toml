@@ -28,7 +28,6 @@ dependencies = [
     "psycopg[binary]~=3.3",
     "pydantic-settings~=2.15",
     "redis~=7.4", # already the newest 7.x; held below 8 by faststream 0.6.7's redis extra, which caps redis <8.0.0
-    "sentry-sdk~=2.69",
     "sqlalchemy~=2.0",
     "structlog~=26.1",
     "tenacity~=9.1",

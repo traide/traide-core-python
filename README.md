@@ -50,10 +50,9 @@ traide-core-python = {git = "https://github.com/traide/traide-core-python.git", 
 ```python
 from traide.observability.tracing_config import configure_tracing, TracingType
 from traide.observability.logging_config import LoggingConfig, LogType, LogLevel
-from traide.observability.sentry_config import SentryConfig, configure_sentry
 
 # Or import everything from observability
-from traide.observability import configure_tracing, LoggingConfig, SentryConfig
+from traide.observability import configure_tracing, LoggingConfig
 ```
 
 ## Development
