@@ -24,7 +24,7 @@ dependencies = [
     "opentelemetry-exporter-prometheus==0.65b0",
     "opentelemetry-instrumentation-sqlalchemy==0.65b0",
     "opentelemetry-exporter-gcp-trace~=1.12.0", # held: 1.13/1.14 only add a deprecation marker on CloudTraceSpanExporter, which strict pyright rejects -- migrate to the OTLP exporter instead of bumping
-    "pgvector~=0.4.2", # held at 0.4.x: 0.5.0 makes SQLAlchemy vector columns return list instead of ndarray, which ai-prediction-service reads directly
+    "pgvector~=0.5.0", # 0.5 returns SQLAlchemy vector columns as list instead of ndarray; ai-prediction-service only re-binds the value into cosine_distance, so nothing reads it as an array
     "psycopg[binary]~=3.3",
     "pydantic-settings~=2.15",
     "redis~=7.4", # already the newest 7.x; held below 8 by faststream 0.6.7's redis extra, which caps redis <8.0.0
