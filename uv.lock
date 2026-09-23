@@ -2106,19 +2106,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sentry-sdk"
-version = "2.69.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/08/1211e4652384195ef754f8ed570566088dc848f8eda7d005abf13f05f17f/sentry_sdk-2.69.2.tar.gz", hash = "sha256:b4d8915a526e626b0b14a2925907554b722d3b8e3e3781570fc35791712af323", size = 1043564, upload-time = "2026-09-15T15:25:09.018Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/78/5d8b79fd60330234317aa827a1f5e445980a6f4e0ea6ed4e1187acb70a0f/sentry_sdk-2.69.2-py3-none-any.whl", hash = "sha256:25bc0a6c55bba0b83398212a7247f4f9f3190f189a1909b68e4807ef4b785895", size = 528765, upload-time = "2026-09-15T15:25:07.362Z" },
-]
-
-[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2219,7 +2206,6 @@ dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic-settings" },
     { name = "redis" },
-    { name = "sentry-sdk" },
     { name = "sqlalchemy" },
     { name = "structlog" },
     { name = "tenacity" },
@@ -2272,7 +2258,6 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "redis", specifier = "~=7.4" },
     { name = "ruff", marker = "extra == 'dev'" },
-    { name = "sentry-sdk", specifier = "~=2.69" },
     { name = "sqlalchemy", specifier = "~=2.0" },
     { name = "structlog", specifier = "~=26.1" },
     { name = "tenacity", specifier = "~=9.1" },
