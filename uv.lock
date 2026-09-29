@@ -575,16 +575,16 @@ wheels = [
 
 [[package]]
 name = "faststream"
-version = "0.6.7"
+version = "0.7.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "fast-depends", extra = ["pydantic"] },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/19/7b/d02c069be0bc671b2eb8f805a1f824d2bfbe1852c9c3f4ad719a7ad3710b/faststream-0.6.7.tar.gz", hash = "sha256:c732eaf861c4cbddd9c7f9098608486a9f05dff67a72335686c3044039045346", size = 306185, upload-time = "2026-03-01T08:20:27.71Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6f/73/d07717b874cdc039b15e6f44b8629d8b00b7abc150167bf8f30132a17d82/faststream-0.7.7.tar.gz", hash = "sha256:dfba491c665f1b962f7c1262496201340bec8711f7d19a786f13cb1e9e2a5bdd", size = 377284, upload-time = "2026-09-23T20:36:14.055Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/23/9d51f352fbb656f5345030f57e20737b1c88167f0eac354ac548d577808b/faststream-0.6.7-py3-none-any.whl", hash = "sha256:a904a4b1e3babeaa244a9460821f5b05dd71b00c959c816360b2acbbe267cd5c", size = 513454, upload-time = "2026-03-01T08:20:26.423Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/eb/dc9e1702cafa904bd06e0f9438baaf4563dcd6e07e9036f08352d2687180/faststream-0.7.7-py3-none-any.whl", hash = "sha256:f15f1c2f389d218e5e9b2d2e22286155faffed20f7e16be8d26ccf5e9f1dd0ce", size = 601362, upload-time = "2026-09-23T20:36:12.222Z" },
 ]
 
 [package.optional-dependencies]
@@ -2170,13 +2170,13 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", marker = "extra == 'fastapi'", specifier = "~=0.141.1" },
-    { name = "faststream", extras = ["cli", "otel", "prometheus", "redis"], marker = "extra == 'faststream'", specifier = "~=0.6.7" },
+    { name = "fastapi", marker = "extra == 'fastapi'", specifier = "~=0.141" },
+    { name = "faststream", extras = ["cli", "otel", "prometheus", "redis"], marker = "extra == 'faststream'", specifier = "~=0.7" },
     { name = "gcloud-aio-storage", specifier = "~=9.6" },
     { name = "google-auth", specifier = "~=2.58" },
     { name = "google-cloud-logging", specifier = "~=3.16" },
     { name = "greenlet", specifier = "~=3.5" },
-    { name = "httpx", specifier = "~=0.28.1" },
+    { name = "httpx", specifier = "~=0.28" },
     { name = "opentelemetry-api", specifier = "~=1.44" },
     { name = "opentelemetry-exporter-gcp-trace", specifier = "~=1.12.0" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = "~=1.44" },
@@ -2184,7 +2184,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-fastapi", marker = "extra == 'fastapi'", specifier = "==0.65b0" },
     { name = "opentelemetry-instrumentation-sqlalchemy", specifier = "==0.65b0" },
     { name = "opentelemetry-sdk", specifier = "~=1.44" },
-    { name = "pgvector", specifier = "~=0.5.0" },
+    { name = "pgvector", specifier = "~=0.5" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "prometheus-fastapi-instrumentator", marker = "extra == 'fastapi'", specifier = "~=8.1" },
     { name = "psycopg", extras = ["binary"], specifier = "~=3.3" },
@@ -2196,7 +2196,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = "~=2.0" },
     { name = "structlog", specifier = "~=26.1" },
     { name = "tenacity", specifier = "~=9.1" },
-    { name = "uvicorn", specifier = "~=0.53.0" },
+    { name = "uvicorn", specifier = "~=0.53" },
 ]
 provides-extras = ["dev", "fastapi", "faststream"]
 
