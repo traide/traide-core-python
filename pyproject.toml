@@ -43,7 +43,7 @@ dev = [
 ]
 fastapi = [
     "fastapi~=0.141",
-    "opentelemetry-instrumentation-fastapi==0.65b0", # same otel release train as the core set above
+    "opentelemetry-instrumentation-fastapi==0.66b0", # same otel release train as the core set above
     "prometheus-fastapi-instrumentator~=8.1",
 ]
 faststream = [
