@@ -1,14 +1,31 @@
 version: 2
 updates:
   - package-ecosystem: "docker"
-    directory: "/"          # Path where your Dockerfile lives
+    directory: "/"
     schedule:
       interval: "daily"
 
-  - package-ecosystem: "pip"
-    directory: "/"          # Path where pyproject.toml lives
+  - package-ecosystem: "uv"
+    directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      opentelemetry:
+        patterns: ["opentelemetry-*"]
+        exclude-patterns: ["opentelemetry-exporter-gcp-trace"]
+    ignore:
+      - dependency-name: "opentelemetry-api"
+        versions: [">=1.45"]
+      - dependency-name: "opentelemetry-sdk"
+        versions: [">=1.45"]
+      - dependency-name: "opentelemetry-exporter-otlp-proto-http"
+        versions: [">=1.45"]
+      - dependency-name: "opentelemetry-exporter-prometheus"
+        versions: [">=0.66b0"]
+      - dependency-name: "opentelemetry-instrumentation-sqlalchemy"
+        versions: [">=0.66b0"]
+      - dependency-name: "opentelemetry-instrumentation-fastapi"
+        versions: [">=0.66b0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
