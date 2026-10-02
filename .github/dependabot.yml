@@ -12,7 +12,6 @@ updates:
     groups:
       opentelemetry:
         patterns: ["opentelemetry-*"]
-        exclude-patterns: ["opentelemetry-exporter-gcp-trace"]
     ignore:
       - dependency-name: "opentelemetry-api"
         versions: [">=1.45"]
