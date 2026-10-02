@@ -36,9 +36,9 @@ def configure_tracing(service_name: str, hostname: str, tracing_type: TracingTyp
     if tracing_type == TracingType.CONSOLE:
         span_processor = BatchSpanProcessor(OTLPSpanExporter())
     else:
-        credentials, project_id = gcp_credentials()
+        credentials, project_id = _gcp_credentials()
         attributes[GCP_PROJECT_ID] = project_id
-        span_processor = gcp_span_processor(credentials)
+        span_processor = _gcp_span_processor(credentials)
     resource = Resource.create(attributes=attributes)
 
     traceProvider = TracerProvider(resource=resource)
@@ -54,11 +54,7 @@ def configure_tracing(service_name: str, hostname: str, tracing_type: TracingTyp
     return traceProvider
 
 
-def gcp_credentials() -> tuple[Credentials, str]:
-    """Application Default Credentials with the project they belong to.
-
-    Raises MissingGcpProjectError when the credentials name no project.
-    """
+def _gcp_credentials() -> tuple[Credentials, str]:
     credentials, project_id = cast(
         tuple[Credentials, str | None],
         google.auth.default(scopes=[CLOUD_PLATFORM_SCOPE]),  # pyright: ignore[reportUnknownMemberType]
@@ -68,10 +64,6 @@ def gcp_credentials() -> tuple[Credentials, str]:
     return credentials, project_id
 
 
-def gcp_span_processor(credentials: Credentials) -> SpanProcessor:
-    """Batch processor that exports spans to Cloud Trace through the Telemetry API.
-
-    The spans' resource must carry the gcp.project_id attribute.
-    """
+def _gcp_span_processor(credentials: Credentials) -> SpanProcessor:
     exporter = OTLPSpanExporter(endpoint=TELEMETRY_TRACES_ENDPOINT, session=AuthorizedSession(credentials))
     return BatchSpanProcessor(exporter)

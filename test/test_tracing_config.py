@@ -1,6 +1,7 @@
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from google.oauth2.credentials import Credentials
@@ -15,19 +16,17 @@ from traide.observability.tracing_config import (
     MissingGcpProjectError,
     TracingType,
     configure_tracing,
-    gcp_credentials,
-    gcp_span_processor,
 )
 
 PROJECT_ID = "traide-ai-test"
 TOKEN = "test-token"
 
 
-def test_gcp_span_processor_posts_spans_to_the_telemetry_api_with_the_credentials_token(
+def test_gcp_tracing_posts_spans_to_the_telemetry_api_with_the_credentials_token(
     sent_requests: list[PreparedRequest],
 ) -> None:
-    provider = TracerProvider()
-    provider.add_span_processor(gcp_span_processor(Credentials(token=TOKEN)))
+    with _application_default_credentials(project_id=PROJECT_ID):
+        provider = _configure(TracingType.GCP)
 
     provider.get_tracer(__name__).start_span("unit-of-work").end()
     provider.force_flush()
@@ -37,27 +36,24 @@ def test_gcp_span_processor_posts_spans_to_the_telemetry_api_with_the_credential
 
 
 def test_gcp_tracing_tags_the_resource_with_the_credentials_project() -> None:
-    with patch("google.auth.default", return_value=(Credentials(token=TOKEN), PROJECT_ID)):
-        console_provider = configure_tracing(service_name="svc", hostname="host", tracing_type=TracingType.CONSOLE)
-        gcp_provider = configure_tracing(service_name="svc", hostname="host", tracing_type=TracingType.GCP)
+    with _application_default_credentials(project_id=PROJECT_ID):
+        console_provider = _configure(TracingType.CONSOLE)
+        gcp_provider = _configure(TracingType.GCP)
 
     assert GCP_PROJECT_ID not in console_provider.resource.attributes
     assert gcp_provider.resource.attributes[GCP_PROJECT_ID] == PROJECT_ID
 
 
-def test_gcp_credentials_request_the_cloud_platform_scope() -> None:
-    with patch("google.auth.default", return_value=(Credentials(token=TOKEN), PROJECT_ID)) as default:
-        assert gcp_credentials()[1] == PROJECT_ID
+def test_gcp_tracing_requests_the_cloud_platform_scope() -> None:
+    with _application_default_credentials(project_id=PROJECT_ID) as default:
+        _configure(TracingType.GCP)
 
     default.assert_called_once_with(scopes=[CLOUD_PLATFORM_SCOPE])
 
 
-def test_gcp_credentials_without_a_project_raise() -> None:
-    with (
-        patch("google.auth.default", return_value=(Credentials(token=TOKEN), None)),
-        pytest.raises(MissingGcpProjectError),
-    ):
-        gcp_credentials()
+def test_gcp_tracing_without_a_credentials_project_raises() -> None:
+    with _application_default_credentials(project_id=None), pytest.raises(MissingGcpProjectError):
+        _configure(TracingType.GCP)
 
 
 @pytest.fixture
@@ -72,3 +68,13 @@ def sent_requests() -> Iterator[list[PreparedRequest]]:
 
     with patch.object(HTTPAdapter, "send", autospec=True, side_effect=send):
         yield sent
+
+
+@contextmanager
+def _application_default_credentials(project_id: str | None) -> Generator[MagicMock, None, None]:
+    with patch("google.auth.default", return_value=(Credentials(token=TOKEN), project_id)) as default:
+        yield default
+
+
+def _configure(tracing_type: TracingType) -> TracerProvider:
+    return configure_tracing(service_name="svc", hostname="host", tracing_type=tracing_type)
