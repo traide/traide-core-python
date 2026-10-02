@@ -756,15 +756,15 @@ grpc = [
 
 [[package]]
 name = "google-auth"
-version = "2.58.0"
+version = "2.59.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "pyasn1-modules" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ac/ca/f398a483ce5aad18ca2f735646e45ccee2439bd94a41a4ad0cfa646bd495/google_auth-2.58.0.tar.gz", hash = "sha256:55e30cf15e737de92c5323d78cda8a83fcd57e7ffbaf900c4600039fd60a80fd", size = 380018, upload-time = "2026-09-09T20:49:38.043Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/0b/9b4e806ebcd29701b5193a162dd9906c4c5a16cbde8476461622d2bfa70e/google_auth-2.59.0.tar.gz", hash = "sha256:eb32f44f89f6b577947ebee5887c1db46e6b1a278889ba369a88179643f32240", size = 381025, upload-time = "2026-09-28T21:49:59.047Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/13/477d90d09591b3938b45c4e11f4d8a51291682112cb5efcac961e815d562/google_auth-2.58.0-py3-none-any.whl", hash = "sha256:8a9c4645bb4c8e91668fb1934b95ae6a8687084232753639220ba9bf04a1610d", size = 262404, upload-time = "2026-09-09T20:49:33.951Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/fd/4208e3ac1d7df39f4e8b044a3943eb8a5a99aaf8699285bf780f614a0b30/google_auth-2.59.0-py3-none-any.whl", hash = "sha256:43e47b1d3067fb90d77bd9ba21f139bb0577b3f2b9f3e2516fc00f37435efcad", size = 262487, upload-time = "2026-09-28T21:49:57.428Z" },
 ]
 
 [package.optional-dependencies]
