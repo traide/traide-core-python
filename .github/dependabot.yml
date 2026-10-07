@@ -25,6 +25,8 @@ updates:
         versions: [">=0.66b0"]
       - dependency-name: "opentelemetry-instrumentation-fastapi"
         versions: [">=0.66b0"]
+      - dependency-name: "sqlalchemy"
+        versions: [">=2.1"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
