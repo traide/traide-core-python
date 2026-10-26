@@ -1,7 +1,5 @@
 from enum import StrEnum
-from typing import cast
 
-import google.auth
 from google.auth.credentials import Credentials
 from google.auth.transport.requests import AuthorizedSession
 from opentelemetry import metrics, trace
@@ -13,7 +11,8 @@ from opentelemetry.sdk.resources import SERVICE_INSTANCE_ID, SERVICE_NAME, Resou
 from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+from traide.google_cloud import cloud_platform_default_credentials
+
 GCP_PROJECT_ID = "gcp.project_id"
 TELEMETRY_TRACES_ENDPOINT = "https://telemetry.googleapis.com/v1/traces"
 
@@ -55,10 +54,7 @@ def configure_tracing(service_name: str, hostname: str, tracing_type: TracingTyp
 
 
 def _gcp_credentials() -> tuple[Credentials, str]:
-    credentials, project_id = cast(
-        tuple[Credentials, str | None],
-        google.auth.default(scopes=[CLOUD_PLATFORM_SCOPE]),  # pyright: ignore[reportUnknownMemberType]
-    )
+    credentials, project_id = cloud_platform_default_credentials()
     if not project_id:
         raise MissingGcpProjectError("Application Default Credentials name no GCP project")
     return credentials, project_id
