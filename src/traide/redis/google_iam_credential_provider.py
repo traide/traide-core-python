@@ -3,9 +3,10 @@ import functools
 import threading
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any, Protocol, cast
+from typing import cast
 
 import structlog
+from google.auth.credentials import Credentials, TokenState
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 
@@ -21,70 +22,90 @@ EXPIRY_SAFETY_MARGIN = timedelta(seconds=30)
 logger = structlog.get_logger()
 
 
-class RefreshableCredentials(Protocol):
-    token: str | None
-    expiry: datetime | None
-
-    @property
-    def valid(self) -> bool: ...
-
-    def refresh(self, request: Any) -> None: ...
-
-
 class GoogleIamCredentialProvider(CredentialProvider):
-    def __init__(
-        self,
-        credentials_loader: Callable[[], RefreshableCredentials] | None = None,
-    ) -> None:
+    def __init__(self, credentials_loader: Callable[[], Credentials] | None = None) -> None:
         self._credentials_loader = credentials_loader or self._load_cloud_platform_credentials
-        self._credentials: RefreshableCredentials | None = None
-        self._lock = threading.Lock()
+        self._credentials: Credentials | None = None
+        self._refresh_lock = threading.Lock()
         self._retry_not_before: datetime | None = None
         self._request = functools.partial(Request(), timeout=REFRESH_TIMEOUT_SECONDS)
 
     def get_credentials(self) -> tuple[str, str]:
-        with self._lock:
+        token_state = self._token_state()
+        if token_state is TokenState.INVALID:
+            return self._wait_for_refresh()
+        if token_state is TokenState.STALE and not self._refresh_held_off() and self._refresh_lock.acquire(blocking=False):
             try:
-                return self._issue_credentials()
+                self._refresh_stale_token()
+            finally:
+                self._refresh_lock.release()
+        return self._cached_credentials()
+
+    async def get_credentials_async(self) -> tuple[str, str]:
+        token_state = self._token_state()
+        if token_state is TokenState.FRESH or (token_state is TokenState.STALE and (self._refresh_held_off() or self._refresh_lock.locked())):
+            return self._cached_credentials()
+        return await asyncio.to_thread(self.get_credentials)
+
+    def _token_state(self) -> TokenState:
+        if self._credentials is None:
+            return TokenState.INVALID
+        token_state = self._credentials.token_state
+        expiry = cast(datetime | None, self._credentials.expiry)
+        if token_state is TokenState.STALE and expiry is not None and expiry - EXPIRY_SAFETY_MARGIN <= self._naive_utc_now():
+            return TokenState.INVALID
+        return token_state
+
+    def _cached_credentials(self) -> tuple[str, str]:
+        token = cast(str | None, self._credentials.token) if self._credentials is not None else None
+        if token is None:
+            raise AuthenticationError("google iam token missing")
+        return IAM_USERNAME, token
+
+    def _wait_for_refresh(self) -> tuple[str, str]:
+        with self._refresh_lock:
+            try:
+                return self._refresh_invalid_token()
             except Exception as error:
                 raise AuthenticationError("google iam credentials unavailable") from error
 
-    def _issue_credentials(self) -> tuple[str, str]:
+    def _refresh_invalid_token(self) -> tuple[str, str]:
+        credentials = self._loaded_credentials()
+        if self._token_state() is not TokenState.INVALID:
+            return self._cached_credentials()
+        if self._refresh_held_off():
+            raise RefreshError("google iam token refresh held off after a failed attempt")
+        self._refresh(credentials)
+        return self._cached_credentials()
+
+    def _refresh_stale_token(self) -> None:
+        try:
+            self._refresh(self._loaded_credentials())
+        except Exception:
+            logger.warning("google_iam_token_refresh_failed", exc_info=True)
+
+    def _loaded_credentials(self) -> Credentials:
         if self._credentials is None:
             self._credentials = self._credentials_loader()
-        if self._refresh_due(self._credentials):
-            self._refresh(self._credentials)
-        if self._credentials.token is None:
-            raise RefreshError("credentials refresh returned no token")
-        return IAM_USERNAME, self._credentials.token
+        return self._credentials
 
-    async def get_credentials_async(self) -> tuple[str, str]:
-        return await asyncio.to_thread(self.get_credentials)
-
-    def _refresh_due(self, credentials: RefreshableCredentials) -> bool:
-        if self._is_expired(credentials):
-            return True
-        if self._retry_not_before is not None and self._naive_utc_now() < self._retry_not_before:
-            return False
-        return not credentials.valid
-
-    def _is_expired(self, credentials: RefreshableCredentials) -> bool:
-        return credentials.token is None or credentials.expiry is None or credentials.expiry - EXPIRY_SAFETY_MARGIN <= self._naive_utc_now()
-
-    def _refresh(self, credentials: RefreshableCredentials) -> None:
+    def _refresh(self, credentials: Credentials) -> None:
         try:
-            credentials.refresh(self._request)
+            credentials.refresh(self._request)  # pyright: ignore[reportUnknownMemberType]
+            if self._token_state() is TokenState.INVALID:
+                raise RefreshError("credentials refresh returned no usable token")
         except Exception:
-            if self._is_expired(credentials):
-                raise
             self._retry_not_before = self._naive_utc_now() + REFRESH_RETRY_DELAY
-            logger.warning("google_iam_token_refresh_failed", exc_info=True)
-        else:
-            self._retry_not_before = None
+            raise
+        self._retry_not_before = None
+
+    def _refresh_held_off(self) -> bool:
+        retry_not_before = self._retry_not_before
+        return retry_not_before is not None and self._naive_utc_now() < retry_not_before
 
     @staticmethod
-    def _load_cloud_platform_credentials() -> RefreshableCredentials:
-        return cast(RefreshableCredentials, cloud_platform_default_credentials()[0])
+    def _load_cloud_platform_credentials() -> Credentials:
+        return cloud_platform_default_credentials()[0]
 
     @staticmethod
     def _naive_utc_now() -> datetime:

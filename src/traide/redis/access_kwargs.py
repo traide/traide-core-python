@@ -1,7 +1,11 @@
+import threading
 from typing import Any
 
 import redis.asyncio.connection
 from traide.redis.google_iam_credential_provider import GoogleIamCredentialProvider
+
+_shared_provider: GoogleIamCredentialProvider | None = None
+_shared_provider_lock = threading.Lock()
 
 
 def redis_client_access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_name: str) -> dict[str, Any]:
@@ -25,5 +29,13 @@ def _access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_name: str) ->
     if tls_ca_path:
         kwargs.update(ssl_ca_certs=tls_ca_path, ssl_cert_reqs="required", ssl_check_hostname=False)
     if iam_auth:
-        kwargs["credential_provider"] = GoogleIamCredentialProvider()
+        kwargs["credential_provider"] = _shared_credential_provider()
     return kwargs
+
+
+def _shared_credential_provider() -> GoogleIamCredentialProvider:
+    global _shared_provider
+    with _shared_provider_lock:
+        if _shared_provider is None:
+            _shared_provider = GoogleIamCredentialProvider()
+        return _shared_provider

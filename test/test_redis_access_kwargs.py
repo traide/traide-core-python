@@ -4,10 +4,16 @@ from typing import Any
 import pytest
 import redis.asyncio.connection
 
+from traide.redis import access_kwargs as access_kwargs_module
 from traide.redis.access_kwargs import redis_client_access_kwargs, redis_pool_access_kwargs
 from traide.redis.google_iam_credential_provider import GoogleIamCredentialProvider
 
 CA_PATH = "/etc/redis-ca/ca.pem"
+
+
+@pytest.fixture(autouse=True)
+def no_shared_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(access_kwargs_module, "_shared_provider", None)
 
 
 def test_a_plain_connection_carries_only_the_client_name() -> None:
@@ -50,3 +56,16 @@ def test_an_empty_ca_path_leaves_tls_off() -> None:
 def test_iam_auth_without_tls_is_refused(access_kwargs: Callable[..., dict[str, Any]], tls_ca_path: str | None) -> None:
     with pytest.raises(ValueError, match="IAM auth requires TLS"):
         access_kwargs(tls_ca_path=tls_ca_path, iam_auth=True, client_name="svc")
+
+
+def test_client_and_pool_kwargs_share_one_credential_provider() -> None:
+    first = redis_client_access_kwargs(tls_ca_path=CA_PATH, iam_auth=True, client_name="svc")
+    second = redis_client_access_kwargs(tls_ca_path=CA_PATH, iam_auth=True, client_name="other")
+    pool = redis_pool_access_kwargs(tls_ca_path=CA_PATH, iam_auth=True, client_name="svc")
+    assert first["credential_provider"] is second["credential_provider"] is pool["credential_provider"]
+
+
+def test_an_injected_shared_provider_is_handed_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    injected = GoogleIamCredentialProvider()
+    monkeypatch.setattr(access_kwargs_module, "_shared_provider", injected)
+    assert redis_pool_access_kwargs(tls_ca_path=CA_PATH, iam_auth=True, client_name="svc")["credential_provider"] is injected
