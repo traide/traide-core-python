@@ -19,6 +19,8 @@ def redis_pool_access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_nam
 
 
 def _access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_name: str) -> dict[str, Any]:
+    if iam_auth and not tls_ca_path:
+        raise ValueError("Redis IAM auth requires TLS: set REDIS_TLS_CA_PATH")
     kwargs: dict[str, Any] = {"client_name": client_name}
     if tls_ca_path:
         kwargs.update(ssl_ca_certs=tls_ca_path, ssl_cert_reqs="required", ssl_check_hostname=False)
