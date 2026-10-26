@@ -34,3 +34,8 @@ def test_pool_kwargs_select_the_async_ssl_connection_class() -> None:
 def test_pool_kwargs_without_tls_keep_the_default_connection_class() -> None:
     kwargs = redis_pool_access_kwargs(tls_ca_path=None, iam_auth=False, client_name="svc")
     assert kwargs == {"client_name": "svc"}
+
+
+def test_an_empty_ca_path_leaves_tls_off() -> None:
+    assert redis_client_access_kwargs(tls_ca_path="", iam_auth=False, client_name="svc") == {"client_name": "svc"}
+    assert redis_pool_access_kwargs(tls_ca_path="", iam_auth=False, client_name="svc") == {"client_name": "svc"}

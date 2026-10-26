@@ -6,21 +6,21 @@ from traide.redis.google_iam_credential_provider import GoogleIamCredentialProvi
 
 def redis_client_access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_name: str) -> dict[str, Any]:
     kwargs = _access_kwargs(tls_ca_path=tls_ca_path, iam_auth=iam_auth, client_name=client_name)
-    if tls_ca_path is not None:
+    if tls_ca_path:
         kwargs["ssl"] = True
     return kwargs
 
 
 def redis_pool_access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_name: str) -> dict[str, Any]:
     kwargs = _access_kwargs(tls_ca_path=tls_ca_path, iam_auth=iam_auth, client_name=client_name)
-    if tls_ca_path is not None:
+    if tls_ca_path:
         kwargs["connection_class"] = redis.asyncio.connection.SSLConnection
     return kwargs
 
 
 def _access_kwargs(tls_ca_path: str | None, iam_auth: bool, client_name: str) -> dict[str, Any]:
     kwargs: dict[str, Any] = {"client_name": client_name}
-    if tls_ca_path is not None:
+    if tls_ca_path:
         kwargs.update(ssl_ca_certs=tls_ca_path, ssl_cert_reqs="required", ssl_check_hostname=False)
     if iam_auth:
         kwargs["credential_provider"] = GoogleIamCredentialProvider()
