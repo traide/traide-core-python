@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol, cast
 
 import google.auth
+import structlog
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 
 from redis.credentials import CredentialProvider
@@ -12,6 +14,9 @@ from redis.credentials import CredentialProvider
 IAM_USERNAME = "default"
 CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 TOKEN_REFRESH_MARGIN = timedelta(minutes=5)
+REFRESH_RETRY_DELAY = timedelta(seconds=30)
+
+logger = structlog.get_logger()
 
 
 class RefreshableCredentials(Protocol):
@@ -39,6 +44,7 @@ class GoogleIamCredentialProvider(CredentialProvider):
         self._clock = clock
         self._credentials: RefreshableCredentials | None = None
         self._lock = threading.Lock()
+        self._retry_not_before: datetime | None = None
 
     def get_credentials(self) -> tuple[str, str]:
         with self._lock:
@@ -46,18 +52,31 @@ class GoogleIamCredentialProvider(CredentialProvider):
                 self._credentials = self._credentials_loader()
             if self._refresh_due(self._credentials):
                 self._refresh(self._credentials)
-            assert self._credentials.token is not None
+            if self._credentials.token is None:
+                raise RefreshError("credentials refresh returned no token")
             return IAM_USERNAME, self._credentials.token
 
     async def get_credentials_async(self) -> tuple[str, str]:
         return await asyncio.to_thread(self.get_credentials)
 
     def _refresh_due(self, credentials: RefreshableCredentials) -> bool:
-        return credentials.token is None or credentials.expiry is None or credentials.expiry - self._clock() < TOKEN_REFRESH_MARGIN
+        if self._is_expired(credentials):
+            return True
+        if self._retry_not_before is not None and self._clock() < self._retry_not_before:
+            return False
+        assert credentials.expiry is not None
+        return credentials.expiry - self._clock() < TOKEN_REFRESH_MARGIN
+
+    def _is_expired(self, credentials: RefreshableCredentials) -> bool:
+        return credentials.token is None or credentials.expiry is None or credentials.expiry <= self._clock()
 
     def _refresh(self, credentials: RefreshableCredentials) -> None:
         try:
             credentials.refresh(Request())
         except Exception:
-            if credentials.token is None or credentials.expiry is None or credentials.expiry <= self._clock():
+            if self._is_expired(credentials):
                 raise
+            self._retry_not_before = self._clock() + REFRESH_RETRY_DELAY
+            logger.warning("google_iam_token_refresh_failed", exc_info=True)
+        else:
+            self._retry_not_before = None
