@@ -5,16 +5,15 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol, cast
 
-import google.auth
 import structlog
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 
 from redis.credentials import CredentialProvider
 from redis.exceptions import AuthenticationError
+from traide.google_cloud import cloud_platform_default_credentials
 
 IAM_USERNAME = "default"
-CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 REFRESH_RETRY_DELAY = timedelta(seconds=30)
 REFRESH_TIMEOUT_SECONDS = 10
 EXPIRY_SAFETY_MARGIN = timedelta(seconds=30)
@@ -85,7 +84,7 @@ class GoogleIamCredentialProvider(CredentialProvider):
 
     @staticmethod
     def _load_cloud_platform_credentials() -> RefreshableCredentials:
-        return cast(RefreshableCredentials, google.auth.default(scopes=[CLOUD_PLATFORM_SCOPE])[0])  # pyright: ignore[reportUnknownMemberType]
+        return cast(RefreshableCredentials, cloud_platform_default_credentials()[0])
 
     @staticmethod
     def _naive_utc_now() -> datetime:

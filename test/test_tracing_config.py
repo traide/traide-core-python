@@ -9,8 +9,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from requests import PreparedRequest, Response
 from requests.adapters import HTTPAdapter
 
+from traide.google_cloud import CLOUD_PLATFORM_SCOPE
 from traide.observability.tracing_config import (
-    CLOUD_PLATFORM_SCOPE,
     GCP_PROJECT_ID,
     TELEMETRY_TRACES_ENDPOINT,
     MissingGcpProjectError,
