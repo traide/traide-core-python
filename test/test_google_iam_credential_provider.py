@@ -78,13 +78,13 @@ def test_first_call_refreshes_and_returns_the_default_username_with_the_token(pr
     assert credentials.refresh_count == 1
 
 
-def test_reuses_the_token_while_more_than_five_minutes_remain(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
+def test_reuses_the_token_while_it_is_valid(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     provider.get_credentials()
     _expire_in(credentials, timedelta(minutes=10))
     assert provider.get_credentials() == ("default", "token-1")
 
 
-def test_refreshes_the_token_when_less_than_five_minutes_remain(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
+def test_refreshes_the_token_once_it_is_stale(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     provider.get_credentials()
     _expire_in(credentials, timedelta(minutes=3))
     assert provider.get_credentials() == ("default", "token-2")
