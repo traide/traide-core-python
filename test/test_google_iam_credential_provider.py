@@ -1,21 +1,30 @@
 import asyncio
 import threading
+import time
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 import pytest
+import requests
 from google.auth.credentials import Credentials, TokenState
 from google.auth.exceptions import DefaultCredentialsError, RefreshError
+from google.auth.transport.requests import Request
 from redis.exceptions import AuthenticationError
 from structlog.testing import capture_logs
 
 from traide.redis import google_iam_credential_provider as provider_module
-from traide.redis.google_iam_credential_provider import REFRESH_RETRY_DELAY, REFRESH_TIMEOUT_SECONDS, GoogleIamCredentialProvider
+from traide.redis.google_iam_credential_provider import (
+    REFRESH_RETRY_DELAY,
+    TOKEN_REQUEST_DEFAULT_TIMEOUT_SECONDS,
+    DefaultTimeoutRequest,
+    GoogleIamCredentialProvider,
+)
 
 GOOGLE_AUTH_REFRESH_THRESHOLD = timedelta(minutes=3, seconds=45)
 STALE_LIFETIME = timedelta(minutes=2)
 WITHIN_SAFETY_MARGIN = timedelta(seconds=20)
 THREAD_TIMEOUT_SECONDS = 5
+SHORT_REFRESH_WAIT_SECONDS = 0.2
 
 
 def _now() -> datetime:
@@ -30,6 +39,7 @@ class StubCredentials:
         self.attempt_count = 0
         self.fail_next_refresh = False
         self.issue_empty_token = False
+        self.refreshed_elsewhere_after_next_read = False
         self.refresh_entered = threading.Event()
         self.refresh_may_finish = threading.Event()
         self.refresh_may_finish.set()
@@ -38,6 +48,14 @@ class StubCredentials:
 
     @property
     def token_state(self) -> TokenState:
+        token_state = self._google_auth_token_state()
+        if self.refreshed_elsewhere_after_next_read:
+            self.refreshed_elsewhere_after_next_read = False
+            self.token = "token-from-elsewhere"
+            self.expire_in(timedelta(hours=1))
+        return token_state
+
+    def _google_auth_token_state(self) -> TokenState:
         if self.token is None:
             return TokenState.INVALID
         if self.expiry is None:
@@ -168,6 +186,14 @@ def test_stale_callers_get_the_cached_token_while_another_caller_refreshes(provi
     assert credentials.attempt_count == 2
 
 
+def test_a_stale_caller_skips_the_refresh_when_another_caller_just_refreshed(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
+    provider.get_credentials()
+    credentials.expire_in(STALE_LIFETIME)
+    credentials.refreshed_elsewhere_after_next_read = True
+    assert provider.get_credentials() == ("default", "token-from-elsewhere")
+    assert credentials.attempt_count == 1
+
+
 def test_a_failed_stale_refresh_keeps_the_cached_token_and_holds_off_retries(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     provider.get_credentials()
     credentials.expire_in(STALE_LIFETIME)
@@ -228,6 +254,20 @@ def test_an_expired_token_raises_without_a_refresh_during_the_hold_off(provider:
     assert credentials.attempt_count == 1
 
 
+def test_a_caller_without_a_usable_token_stops_waiting_for_a_slow_refresh(provider: GoogleIamCredentialProvider, credentials: StubCredentials, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(provider_module, "REFRESH_WAIT_TIMEOUT_SECONDS", SHORT_REFRESH_WAIT_SECONDS)
+    refresher = _start_blocked_refresh(provider=provider, credentials=credentials)
+    started = time.monotonic()
+    try:
+        with pytest.raises(AuthenticationError):
+            provider.get_credentials()
+        waited_seconds = time.monotonic() - started
+    finally:
+        credentials.refresh_may_finish.set()
+        _join([refresher])
+    assert SHORT_REFRESH_WAIT_SECONDS <= waited_seconds < THREAD_TIMEOUT_SECONDS
+
+
 def test_concurrent_callers_without_a_usable_token_share_one_refresh(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     credentials.refresh_may_finish.clear()
     results, callers = _start_callers(provider=provider, count=20)
@@ -283,6 +323,21 @@ def test_a_failing_loader_raises_an_authentication_error_chained_from_the_cause(
     assert isinstance(raised.value.__cause__, DefaultCredentialsError)
 
 
+def test_a_failed_credential_load_is_not_retried_during_the_hold_off() -> None:
+    load_calls: list[None] = []
+
+    def load() -> Credentials:
+        load_calls.append(None)
+        raise DefaultCredentialsError("metadata server not ready")
+
+    provider = GoogleIamCredentialProvider(credentials_loader=load)
+    for _ in range(2):
+        with pytest.raises(AuthenticationError):
+            provider.get_credentials()
+    assert len(load_calls) == 1
+    assert _refresh_held_off(provider)
+
+
 def test_async_credentials_refresh_off_the_event_loop_thread(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     assert asyncio.run(provider.get_credentials_async()) == ("default", "token-1")
     assert credentials.refresh_thread is not threading.main_thread()
@@ -331,15 +386,29 @@ def test_every_refresh_uses_the_same_request(provider: GoogleIamCredentialProvid
     assert credentials.requests[0] is credentials.requests[1]
 
 
-def test_refreshes_pass_the_refresh_timeout_to_the_transport(credentials: StubCredentials, monkeypatch: pytest.MonkeyPatch) -> None:
-    calls: list[dict[str, Any]] = []
-
-    class RecordingRequest:
-        def __call__(self, **kwargs: Any) -> None:
-            calls.append(kwargs)
-
-    monkeypatch.setattr(provider_module, "Request", RecordingRequest)
-    provider = _provider(credentials=credentials, loader_calls=[])
+def test_refreshes_use_a_google_auth_request_that_exposes_its_session(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     provider.get_credentials()
-    credentials.requests[0](url="https://example.test", method="GET")
-    assert calls == [{"url": "https://example.test", "method": "GET", "timeout": REFRESH_TIMEOUT_SECONDS}]
+    request = credentials.requests[0]
+    assert isinstance(request, Request)
+    assert isinstance(request.session, requests.Session)
+
+
+class RecordingSession:
+    def __init__(self) -> None:
+        self.timeouts: list[Any] = []
+
+    def request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
+        self.timeouts.append(kwargs["timeout"])
+        return requests.Response()
+
+
+def test_token_requests_default_their_timeout() -> None:
+    session = RecordingSession()
+    DefaultTimeoutRequest(session=cast(requests.Session, session))(url="https://example.test")
+    assert session.timeouts == [TOKEN_REQUEST_DEFAULT_TIMEOUT_SECONDS]
+
+
+def test_token_requests_keep_a_timeout_the_caller_passes() -> None:
+    session = RecordingSession()
+    DefaultTimeoutRequest(session=cast(requests.Session, session))(url="https://example.test", timeout=3)
+    assert session.timeouts == [3]
