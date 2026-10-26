@@ -94,6 +94,8 @@ class GoogleIamCredentialProvider(CredentialProvider):
         return self._cached_credentials()
 
     def _refresh_stale_token(self) -> None:
+        if self._refresh_held_off():
+            return
         try:
             self._refresh_unless_fresh()
         except Exception:

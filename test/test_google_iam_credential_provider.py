@@ -194,6 +194,30 @@ def test_a_stale_caller_skips_the_refresh_when_another_caller_just_refreshed(pro
     assert credentials.attempt_count == 1
 
 
+class HoldOffOnAcquireLock:
+    def __init__(self, provider: GoogleIamCredentialProvider) -> None:
+        self._provider = provider
+        self._lock = threading.Lock()
+
+    def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+        _hold_off_refreshes(self._provider)
+        return self._lock.acquire(blocking, timeout)
+
+    def release(self) -> None:
+        self._lock.release()
+
+    def locked(self) -> bool:
+        return self._lock.locked()
+
+
+def test_a_stale_caller_skips_the_refresh_when_another_caller_just_started_a_hold_off(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
+    provider.get_credentials()
+    credentials.expire_in(STALE_LIFETIME)
+    provider._refresh_lock = cast(threading.Lock, HoldOffOnAcquireLock(provider))  # pyright: ignore[reportPrivateUsage]
+    assert provider.get_credentials() == ("default", "token-1")
+    assert credentials.attempt_count == 1
+
+
 def test_a_failed_stale_refresh_keeps_the_cached_token_and_holds_off_retries(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     provider.get_credentials()
     credentials.expire_in(STALE_LIFETIME)
@@ -400,6 +424,9 @@ class RecordingSession:
     def request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
         self.timeouts.append(kwargs["timeout"])
         return requests.Response()
+
+    def close(self) -> None:
+        pass
 
 
 def test_token_requests_default_their_timeout() -> None:
