@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import threading
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -10,10 +11,13 @@ from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 
 from redis.credentials import CredentialProvider
+from redis.exceptions import AuthenticationError
 
 IAM_USERNAME = "default"
 CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 REFRESH_RETRY_DELAY = timedelta(seconds=30)
+REFRESH_TIMEOUT_SECONDS = 10
+EXPIRY_SAFETY_MARGIN = timedelta(seconds=30)
 
 logger = structlog.get_logger()
 
@@ -37,16 +41,23 @@ class GoogleIamCredentialProvider(CredentialProvider):
         self._credentials: RefreshableCredentials | None = None
         self._lock = threading.Lock()
         self._retry_not_before: datetime | None = None
+        self._request = functools.partial(Request(), timeout=REFRESH_TIMEOUT_SECONDS)
 
     def get_credentials(self) -> tuple[str, str]:
         with self._lock:
-            if self._credentials is None:
-                self._credentials = self._credentials_loader()
-            if self._refresh_due(self._credentials):
-                self._refresh(self._credentials)
-            if self._credentials.token is None:
-                raise RefreshError("credentials refresh returned no token")
-            return IAM_USERNAME, self._credentials.token
+            try:
+                return self._issue_credentials()
+            except Exception as error:
+                raise AuthenticationError("google iam credentials unavailable") from error
+
+    def _issue_credentials(self) -> tuple[str, str]:
+        if self._credentials is None:
+            self._credentials = self._credentials_loader()
+        if self._refresh_due(self._credentials):
+            self._refresh(self._credentials)
+        if self._credentials.token is None:
+            raise RefreshError("credentials refresh returned no token")
+        return IAM_USERNAME, self._credentials.token
 
     async def get_credentials_async(self) -> tuple[str, str]:
         return await asyncio.to_thread(self.get_credentials)
@@ -59,11 +70,11 @@ class GoogleIamCredentialProvider(CredentialProvider):
         return not credentials.valid
 
     def _is_expired(self, credentials: RefreshableCredentials) -> bool:
-        return credentials.token is None or credentials.expiry is None or credentials.expiry <= self._naive_utc_now()
+        return credentials.token is None or credentials.expiry is None or credentials.expiry - EXPIRY_SAFETY_MARGIN <= self._naive_utc_now()
 
     def _refresh(self, credentials: RefreshableCredentials) -> None:
         try:
-            credentials.refresh(Request())
+            credentials.refresh(self._request)
         except Exception:
             if self._is_expired(credentials):
                 raise

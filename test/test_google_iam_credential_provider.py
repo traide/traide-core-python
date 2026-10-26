@@ -5,10 +5,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-from google.auth.exceptions import RefreshError
+from google.auth.exceptions import DefaultCredentialsError, RefreshError
+from redis.exceptions import AuthenticationError
 from structlog.testing import capture_logs
 
-from traide.redis.google_iam_credential_provider import GoogleIamCredentialProvider
+from traide.redis import google_iam_credential_provider as provider_module
+from traide.redis.google_iam_credential_provider import REFRESH_TIMEOUT_SECONDS, GoogleIamCredentialProvider
 
 REFRESH_THRESHOLD = timedelta(minutes=3, seconds=45)
 
@@ -27,6 +29,7 @@ class StubCredentials:
         self.fail_next_refresh = False
         self.issue_empty_token = False
         self.refresh_thread: threading.Thread | None = None
+        self.requests: list[Any] = []
 
     @property
     def valid(self) -> bool:
@@ -34,6 +37,7 @@ class StubCredentials:
 
     def refresh(self, request: Any) -> None:
         self.refresh_thread = threading.current_thread()
+        self.requests.append(request)
         self.attempt_count += 1
         time.sleep(self._refresh_duration_seconds)
         if self.fail_next_refresh:
@@ -111,8 +115,9 @@ def test_raises_when_a_refresh_fails_after_expiry(provider: GoogleIamCredentialP
     provider.get_credentials()
     _expire_in(credentials, timedelta(seconds=-1))
     credentials.fail_next_refresh = True
-    with pytest.raises(RefreshError):
+    with pytest.raises(AuthenticationError) as raised:
         provider.get_credentials()
+    assert isinstance(raised.value.__cause__, RefreshError)
 
 
 def test_concurrent_callers_share_one_refresh() -> None:
@@ -162,7 +167,7 @@ def test_retries_a_failed_refresh_after_the_retry_delay(provider: GoogleIamCrede
 
 def test_attempts_a_refresh_once_the_token_has_expired_even_within_the_retry_delay(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     provider.get_credentials()
-    _expire_in(credentials, timedelta(seconds=10))
+    _expire_in(credentials, timedelta(minutes=1))
     credentials.fail_next_refresh = True
     provider.get_credentials()
     _expire_in(credentials, timedelta(seconds=-5))
@@ -171,5 +176,45 @@ def test_attempts_a_refresh_once_the_token_has_expired_even_within_the_retry_del
 
 def test_raises_when_a_refresh_yields_no_token(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
     credentials.issue_empty_token = True
-    with pytest.raises(RefreshError):
+    with pytest.raises(AuthenticationError):
         provider.get_credentials()
+
+
+def test_a_failing_loader_raises_an_authentication_error_chained_from_the_cause() -> None:
+    def load() -> StubCredentials:
+        raise DefaultCredentialsError("no credentials")
+
+    with pytest.raises(AuthenticationError) as raised:
+        GoogleIamCredentialProvider(credentials_loader=load).get_credentials()
+    assert isinstance(raised.value.__cause__, DefaultCredentialsError)
+
+
+def test_a_token_within_the_safety_margin_of_expiry_counts_as_expired_despite_the_retry_delay(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
+    provider.get_credentials()
+    _expire_in(credentials, timedelta(minutes=1))
+    credentials.fail_next_refresh = True
+    provider.get_credentials()
+    _expire_in(credentials, timedelta(seconds=20))
+    assert provider.get_credentials() == ("default", "token-2")
+
+
+def test_every_refresh_uses_the_same_request(provider: GoogleIamCredentialProvider, credentials: StubCredentials) -> None:
+    provider.get_credentials()
+    _expire_in(credentials, timedelta(minutes=3))
+    provider.get_credentials()
+    assert len(credentials.requests) == 2
+    assert credentials.requests[0] is credentials.requests[1]
+
+
+def test_refreshes_pass_the_refresh_timeout_to_the_transport(credentials: StubCredentials, monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[dict[str, Any]] = []
+
+    class RecordingRequest:
+        def __call__(self, **kwargs: Any) -> None:
+            calls.append(kwargs)
+
+    monkeypatch.setattr(provider_module, "Request", RecordingRequest)
+    provider = _provider(credentials=credentials, loader_calls=[])
+    provider.get_credentials()
+    credentials.requests[0](url="https://example.test", method="GET")
+    assert calls == [{"url": "https://example.test", "method": "GET", "timeout": REFRESH_TIMEOUT_SECONDS}]
