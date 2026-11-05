@@ -13,18 +13,6 @@ updates:
       opentelemetry:
         patterns: ["opentelemetry-*"]
     ignore:
-      - dependency-name: "opentelemetry-api"
-        versions: [">=1.45"]
-      - dependency-name: "opentelemetry-sdk"
-        versions: [">=1.45"]
-      - dependency-name: "opentelemetry-exporter-otlp-proto-http"
-        versions: [">=1.45"]
-      - dependency-name: "opentelemetry-exporter-prometheus"
-        versions: [">=0.66b0"]
-      - dependency-name: "opentelemetry-instrumentation-sqlalchemy"
-        versions: [">=0.66b0"]
-      - dependency-name: "opentelemetry-instrumentation-fastapi"
-        versions: [">=0.66b0"]
       - dependency-name: "sqlalchemy"
         versions: [">=2.1"]
 

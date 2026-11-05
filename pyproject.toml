@@ -17,18 +17,17 @@ dependencies = [
     "google-cloud-logging~=3.16",
     "greenlet~=3.5", # required to support async sqlalchemy
     "httpx~=0.28",
-    # otel ships core (1.x) and contrib (0.xxbN) as one release train that pins itself together: sdk 1.44.0 requires api ==1.44.0 and semantic-conventions ==0.65b0. Bump the whole set or none of it.
-    # held at 1.44 / 0.65b0: head_of_customs depends on logfire, and every logfire release through 6.0.0b7 requires opentelemetry-sdk <1.45 (pydantic/logfire#2497). Lift the two otel ignore rules in .github/dependabot.yml together with this hold.
-    "opentelemetry-api~=1.44",
-    "opentelemetry-exporter-otlp-proto-http~=1.44",
-    "opentelemetry-sdk~=1.44",
-    "opentelemetry-exporter-prometheus==0.65b0",
-    "opentelemetry-instrumentation-sqlalchemy==0.65b0",
+    # otel ships core (1.x) and contrib (0.xxbN) as one release train that pins itself together: sdk 1.45.2 requires api ==1.45.2 and semantic-conventions ==0.66b2. Bump the whole set or none of it.
+    "opentelemetry-api~=1.45,>=1.45.1", # 1.45.1 fixes the quadratic tracestate parsing in GHSA-xcq7-p3pf-p88h
+    "opentelemetry-exporter-otlp-proto-http~=1.45",
+    "opentelemetry-sdk~=1.45",
+    "opentelemetry-exporter-prometheus==0.66b2",
+    "opentelemetry-instrumentation-sqlalchemy==0.66b2",
     "pgvector~=0.5", # 0.5 returns SQLAlchemy vector columns as list instead of ndarray; ai-prediction-service only re-binds the value into cosine_distance, so nothing reads it as an array
     "psycopg[binary]~=3.3",
     "pydantic-settings~=2.15",
     "redis~=8.1",
-    "sqlalchemy~=2.0,<2.1", # held below 2.1: opentelemetry-instrumentation-sqlalchemy instruments sqlalchemy <2.1 in every release through 0.66b1 and silently skips instrumentation on a conflict, so 2.1 drops the database spans. Lift together with the sqlalchemy ignore rule in .github/dependabot.yml.
+    "sqlalchemy~=2.0,<2.1", # held below 2.1: opentelemetry-instrumentation-sqlalchemy instruments sqlalchemy <2.1 in every release through 0.66b2 and silently skips instrumentation on a conflict, so 2.1 drops the database spans. Support for <2.2 is merged upstream but unreleased (open-telemetry/opentelemetry-python-contrib#5120); lift with the first contrib release that ships it, together with the sqlalchemy ignore rule in .github/dependabot.yml.
     "structlog~=26.1",
     "tenacity~=9.1",
     "uvicorn~=0.53",
@@ -43,7 +42,7 @@ dev = [
 ]
 fastapi = [
     "fastapi~=0.141",
-    "opentelemetry-instrumentation-fastapi==0.65b0", # same otel release train as the core set above
+    "opentelemetry-instrumentation-fastapi==0.66b2", # same otel release train as the core set above
     "prometheus-fastapi-instrumentator~=8.1",
 ]
 faststream = [
